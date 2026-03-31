@@ -11,25 +11,35 @@ interface Props {
 export function TypeSelector({ value, onChange, error }: Props) {
   return (
     <div>
-      <label className="block text-slate-300 text-sm font-medium mb-2">Observation Type</label>
+      <span className="label-caps block mb-2">Observation Type</span>
       <div className="grid grid-cols-3 gap-2">
-        {Object.entries(OBSERVATION_TYPES).map(([key, config]) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => onChange(key as ObservationType)}
-            className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-colors min-h-[72px] ${
-              value === key
-                ? 'border-blue-500 bg-blue-900/30 text-blue-300'
-                : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-500'
-            }`}
-          >
-            <span className="text-2xl">{config.icon}</span>
-            <span className="text-xs font-medium text-center leading-tight">{config.label}</span>
-          </button>
-        ))}
+        {Object.entries(OBSERVATION_TYPES).map(([key, cfg]) => {
+          const active = value === key
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => onChange(key as ObservationType)}
+              className="flex flex-col items-center gap-1.5 p-3 rounded-lg transition-all min-h-[72px]"
+              style={{
+                background:  active ? cfg.color + '18' : 'var(--bg-raised)',
+                border:      `1.5px solid ${active ? cfg.color : 'var(--border-mid)'}`,
+                color:       active ? cfg.color : 'var(--text-secondary)',
+                boxShadow:   active ? `0 0 0 1px ${cfg.color}33` : 'none',
+              }}
+            >
+              <span className="text-2xl leading-none">{cfg.icon}</span>
+              <span
+                className="font-display font-semibold uppercase text-center leading-tight"
+                style={{ fontSize: '0.62rem', letterSpacing: '0.06em' }}
+              >
+                {cfg.label}
+              </span>
+            </button>
+          )
+        })}
       </div>
-      {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
+      {error && <p className="text-xs mt-1.5" style={{ color: 'var(--danger)' }}>{error}</p>}
     </div>
   )
 }

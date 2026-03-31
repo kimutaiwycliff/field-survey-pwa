@@ -1,8 +1,28 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist } from 'next/font/google'
+import { Barlow_Condensed, DM_Sans, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
+import { ThemeProvider } from '@/components/Layout/ThemeProvider'
 
-const geist = Geist({ subsets: ['latin'], variable: '--font-geist' })
+const barlow = Barlow_Condensed({
+  subsets: ['latin'],
+  weight: ['400', '600', '700'],
+  variable: '--font-barlow',
+  display: 'swap',
+})
+
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-dm-sans',
+  display: 'swap',
+})
+
+const jetbrains = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-mono',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Field Survey',
@@ -19,16 +39,31 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#3b82f6',
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)',  color: '#080c12' },
+    { media: '(prefers-color-scheme: light)', color: '#f0ece4' },
+  ],
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geist.variable} h-full`}>
+    <html
+      lang="en"
+      data-theme="dark"
+      className={`${barlow.variable} ${dmSans.variable} ${jetbrains.variable} h-full`}
+    >
       <head>
+        {/* Prevent flash of wrong theme */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('fs-theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){}`,
+          }}
+        />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
-      <body className="h-full bg-slate-900 text-white antialiased">{children}</body>
+      <body className="h-full">
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   )
 }

@@ -4,30 +4,25 @@ import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { useOfflineQueue } from '@/hooks/useOfflineQueue'
 
 export function OfflineBanner() {
-  const isOnline = useOnlineStatus()
+  const isOnline   = useOnlineStatus()
   const { queueCount, syncing } = useOfflineQueue()
 
   if (isOnline && queueCount === 0) return null
 
-  if (isOnline && syncing) {
-    return (
-      <div className="fixed top-0 left-0 right-0 z-50 bg-blue-600 text-white text-sm text-center py-2 px-4 font-medium">
-        🔄 Syncing {queueCount} submission{queueCount !== 1 ? 's' : ''}...
-      </div>
-    )
-  }
-
-  if (isOnline && queueCount > 0) {
-    return (
-      <div className="fixed top-0 left-0 right-0 z-50 bg-green-700 text-white text-sm text-center py-2 px-4 font-medium">
-        ✅ Back online — syncing {queueCount} queued item{queueCount !== 1 ? 's' : ''}
-      </div>
-    )
-  }
+  const bg    = !isOnline ? 'var(--warning)'  : syncing ? 'var(--info)' : 'var(--success)'
+  const label = !isOnline
+    ? `OFFLINE${queueCount > 0 ? ` · ${queueCount} QUEUED` : ''}`
+    : syncing
+    ? `SYNCING ${queueCount} ITEM${queueCount !== 1 ? 'S' : ''}…`
+    : `BACK ONLINE · SYNCING ${queueCount}`
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-amber-600 text-white text-sm text-center py-2 px-4 font-medium">
-      📡 Offline{queueCount > 0 ? ` — ${queueCount} submission${queueCount !== 1 ? 's' : ''} queued` : ''}
+    <div
+      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-2 py-1.5 px-4"
+      style={{ background: bg, color: '#000' }}
+    >
+      <span className="inline-block w-1.5 h-1.5 rounded-full bg-black opacity-60 animate-pulse" />
+      <span className="font-display font-bold text-xs tracking-widest">{label}</span>
     </div>
   )
 }

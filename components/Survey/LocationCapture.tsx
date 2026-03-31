@@ -4,179 +4,127 @@ import { useState, useEffect } from 'react'
 import { getCurrentPosition } from '@/lib/utils/geolocation'
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner'
 
-interface Props {
-  onCapture: (lat: number, lng: number) => void
-  error?: string
-}
-
 type Status = 'prompt' | 'loading' | 'success' | 'denied' | 'unavailable' | 'timeout'
 
-function getErrorDetails(e: unknown): { status: Exclude<Status, 'prompt' | 'loading' | 'success'>; message: string } {
+function parseError(e: unknown): { status: Exclude<Status, 'prompt' | 'loading' | 'success'>; msg: string } {
   if (e instanceof GeolocationPositionError) {
-    switch (e.code) {
-      case GeolocationPositionError.PERMISSION_DENIED:
-        return { status: 'denied', message: 'Location access was denied.' }
-      case GeolocationPositionError.POSITION_UNAVAILABLE:
-        return { status: 'unavailable', message: 'Location signal unavailable — try moving outdoors.' }
-      case GeolocationPositionError.TIMEOUT:
-        return { status: 'timeout', message: 'Location request timed out — check your GPS signal.' }
-    }
+    if (e.code === GeolocationPositionError.PERMISSION_DENIED)   return { status: 'denied',      msg: 'Location access blocked.' }
+    if (e.code === GeolocationPositionError.POSITION_UNAVAILABLE) return { status: 'unavailable', msg: 'Signal unavailable — move outdoors.' }
+    if (e.code === GeolocationPositionError.TIMEOUT)              return { status: 'timeout',     msg: 'Request timed out — check GPS signal.' }
   }
-  return { status: 'unavailable', message: 'Could not get location.' }
+  return { status: 'unavailable', msg: 'Could not get location.' }
 }
 
-export function LocationCapture({ onCapture, error: formError }: Props) {
-  const [status, setStatus] = useState<Status>('prompt')
+export function LocationCapture({ onCapture, error: formError }: { onCapture: (lat: number, lng: number) => void; error?: string }) {
+  const [status,   setStatus]   = useState<Status>('prompt')
   const [position, setPosition] = useState<{ lat: number; lng: number; accuracy: number } | null>(null)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [errMsg,   setErrMsg]   = useState<string | null>(null)
 
   async function capture() {
-    setStatus('loading')
-    setErrorMsg(null)
+    setStatus('loading'); setErrMsg(null)
     try {
       const pos = await getCurrentPosition()
-      setPosition(pos)
-      setStatus('success')
-      onCapture(pos.lat, pos.lng)
+      setPosition(pos); setStatus('success'); onCapture(pos.lat, pos.lng)
     } catch (e) {
-      const { status, message } = getErrorDetails(e)
-      setStatus(status)
-      setErrorMsg(message)
+      const { status, msg } = parseError(e)
+      setStatus(status); setErrMsg(msg)
     }
   }
 
-  // Check existing permission state on mount so we skip the prompt screen
-  // if the user has already granted access.
   useEffect(() => {
-    if (!navigator.permissions) {
-      // Permissions API not available — go straight to capture
-      capture()
-      return
-    }
-    navigator.permissions.query({ name: 'geolocation' }).then((result) => {
-      if (result.state === 'granted') {
-        capture()
-      } else if (result.state === 'denied') {
-        setStatus('denied')
-        setErrorMsg('Location access was denied.')
-      }
-      // 'prompt' state → stay on prompt screen and wait for user tap
+    if (!navigator.permissions) { capture(); return }
+    navigator.permissions.query({ name: 'geolocation' }).then(r => {
+      if      (r.state === 'granted') capture()
+      else if (r.state === 'denied')  { setStatus('denied'); setErrMsg('Location access blocked.') }
     })
   }, [])
 
   return (
     <div>
-      <label className="block text-slate-300 text-sm font-medium mb-2">GPS Location</label>
-      <div className="bg-slate-800 rounded-lg p-4 border border-slate-700 space-y-3">
+      <span className="label-caps block mb-2">GPS Location</span>
+      <div className="rounded-lg p-4 space-y-3" style={{ background: 'var(--bg-raised)', border: '1px solid var(--border-mid)' }}>
 
-        {/* ── Prompt: user hasn't tapped yet ── */}
         {status === 'prompt' && (
-          <div className="space-y-3">
+          <>
             <div className="flex items-start gap-3">
-              <span className="text-2xl mt-0.5">📍</span>
+              <div className="mt-0.5 w-8 h-8 rounded flex items-center justify-center shrink-0" style={{ background: 'var(--accent-dim)', color: 'var(--accent)' }}>
+                <svg viewBox="0 0 20 20" fill="none" className="w-4 h-4" stroke="currentColor" strokeWidth={2}>
+                  <circle cx="10" cy="10" r="3"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2" strokeLinecap="round"/>
+                </svg>
+              </div>
               <div>
-                <p className="text-white text-sm font-medium">Allow location access</p>
-                <p className="text-slate-400 text-xs mt-1">
-                  Tap the button below. Your browser will ask for permission — tap{' '}
-                  <span className="text-white font-semibold">"Allow"</span> to record GPS
-                  coordinates for this observation.
+                <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Allow location access</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                  Your browser will ask for permission — tap <strong style={{ color: 'var(--text-primary)' }}>Allow</strong> to record GPS coordinates.
                 </p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={capture}
-              className="w-full min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors"
-            >
-              📍 Enable GPS &amp; Capture Location
+            <button type="button" onClick={capture} className="btn btn-primary w-full font-display font-bold text-xs uppercase tracking-widest">
+              Enable GPS &amp; Capture
             </button>
-          </div>
+          </>
         )}
 
-        {/* ── Loading ── */}
         {status === 'loading' && (
-          <div className="flex items-center gap-3 text-slate-400 text-sm py-1">
+          <div className="flex items-center gap-3">
             <LoadingSpinner size="sm" />
             <div>
-              <p className="text-white text-sm">Capturing GPS coordinates…</p>
-              <p className="text-slate-500 text-xs">If prompted, tap <strong className="text-slate-300">Allow</strong> in your browser</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Acquiring signal…</p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Tap <strong>Allow</strong> in your browser if prompted</p>
             </div>
           </div>
         )}
 
-        {/* ── Success ── */}
         {status === 'success' && position && (
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-green-400 text-sm font-medium">✅ Location captured</p>
-              <p className="text-slate-400 text-xs mt-0.5">
-                {position.lat.toFixed(5)}, {position.lng.toFixed(5)}
-              </p>
-              <p className="text-slate-500 text-xs">±{Math.round(position.accuracy)}m accuracy</p>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--success)' }} />
+              <div>
+                <p className="font-mono text-sm font-medium" style={{ color: 'var(--success)' }}>
+                  {position.lat.toFixed(5)}, {position.lng.toFixed(5)}
+                </p>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>±{Math.round(position.accuracy)}m accuracy</p>
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={capture}
-              className="text-blue-400 text-xs hover:underline min-h-[44px] px-2"
-            >
+            <button type="button" onClick={capture} className="text-xs px-2 py-1 rounded transition-colors" style={{ color: 'var(--accent)', background: 'var(--accent-dim)' }}>
               Recapture
             </button>
           </div>
         )}
 
-        {/* ── Permission denied ── */}
         {status === 'denied' && (
           <div className="space-y-3">
-            <div className="flex items-start gap-2 text-red-400">
-              <span className="text-lg">🚫</span>
+            <div className="flex items-start gap-2">
+              <span style={{ color: 'var(--danger)' }}>🚫</span>
               <div>
-                <p className="text-sm font-medium">Location access blocked</p>
-                <p className="text-xs text-slate-400 mt-1">
-                  You previously blocked location for this site. To fix it:
-                </p>
-                <ol className="text-xs text-slate-400 mt-1.5 space-y-1 list-decimal list-inside">
-                  <li>Tap the <strong className="text-slate-300">lock / info icon</strong> in your browser's address bar</li>
-                  <li>Find <strong className="text-slate-300">Location</strong> and change it to <strong className="text-slate-300">Allow</strong></li>
-                  <li>Reload the page, then come back to this form</li>
+                <p className="text-sm font-semibold" style={{ color: 'var(--danger)' }}>Location blocked</p>
+                <ol className="text-xs mt-1.5 space-y-1 list-decimal list-inside" style={{ color: 'var(--text-secondary)' }}>
+                  <li>Tap the <strong style={{ color: 'var(--text-primary)' }}>lock icon</strong> in your address bar</li>
+                  <li>Set <strong style={{ color: 'var(--text-primary)' }}>Location</strong> to Allow</li>
+                  <li>Reload and return to this form</li>
                 </ol>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={capture}
-              className="w-full min-h-[44px] border border-slate-600 hover:border-slate-500 text-slate-300 text-sm rounded-lg transition-colors"
-            >
-              Try again
-            </button>
+            <button type="button" onClick={capture} className="btn btn-ghost w-full text-xs">Try again</button>
           </div>
         )}
 
-        {/* ── Unavailable / timeout ── */}
         {(status === 'unavailable' || status === 'timeout') && (
           <div className="space-y-3">
-            <div className="flex items-start gap-2 text-amber-400">
-              <span className="text-lg">{status === 'timeout' ? '⏱️' : '📡'}</span>
+            <div className="flex items-start gap-2">
+              <span>{status === 'timeout' ? '⏱️' : '📡'}</span>
               <div>
-                <p className="text-sm font-medium">{errorMsg}</p>
-                <p className="text-xs text-slate-400 mt-1">
-                  {status === 'timeout'
-                    ? 'Move to an open area with a clear view of the sky and try again.'
-                    : 'Make sure GPS is enabled on your device and try again.'}
+                <p className="text-sm font-semibold" style={{ color: 'var(--warning)' }}>{errMsg}</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+                  {status === 'timeout' ? 'Move to an open area with clear sky.' : 'Ensure GPS is enabled on your device.'}
                 </p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={capture}
-              className="w-full min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors"
-            >
-              Try again
-            </button>
+            <button type="button" onClick={capture} className="btn btn-primary w-full text-xs font-display font-bold uppercase tracking-widest">Try again</button>
           </div>
         )}
       </div>
-
-      {formError && <p className="text-red-400 text-xs mt-1">{formError}</p>}
+      {formError && <p className="text-xs mt-1.5" style={{ color: 'var(--danger)' }}>{formError}</p>}
     </div>
   )
 }

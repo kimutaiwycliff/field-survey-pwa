@@ -3,54 +3,61 @@
 import { Popup } from 'react-leaflet'
 import { Observation, OBSERVATION_TYPES } from '@/lib/utils/observation-types'
 
-function Stars({ value }: { value: number | null }) {
-  if (!value) return <span className="text-slate-400 text-xs">No rating</span>
-  return (
-    <span>
-      {Array.from({ length: 5 }, (_, i) => (
-        <span key={i} className={i < value ? 'text-yellow-400' : 'text-slate-300'}>★</span>
-      ))}
-    </span>
-  )
-}
-
-interface Props {
-  observation: Observation
-}
-
-export function ObservationPopup({ observation }: Props) {
-  const typeConfig = OBSERVATION_TYPES[observation.type] ?? OBSERVATION_TYPES.other
-  const date = new Date(observation.created_at).toLocaleString()
+export function ObservationPopup({ observation }: { observation: Observation }) {
+  const cfg  = OBSERVATION_TYPES[observation.type] ?? OBSERVATION_TYPES.other
+  const date = new Date(observation.created_at).toLocaleString(undefined, {
+    month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  })
 
   return (
-    <Popup minWidth={220} maxWidth={280}>
-      <div className="text-sm font-sans">
-        <div className="font-bold text-base mb-1">
-          {typeConfig.icon} {typeConfig.label}
+    <Popup minWidth={230} maxWidth={280}>
+      <div style={{ fontFamily: 'var(--font-dm-sans, system-ui)', color: 'var(--text-primary)' }}>
+        {/* Header */}
+        <div className="flex items-center gap-2 mb-2">
+          <span
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider"
+            style={{ background: cfg.color + '22', color: cfg.color, border: `1px solid ${cfg.color}55` }}
+          >
+            {cfg.icon} {cfg.label}
+          </span>
+          {!observation.synced && (
+            <span className="text-xs" style={{ color: 'var(--warning)' }}>⚠ Pending</span>
+          )}
         </div>
 
+        {/* Photo */}
         {observation.photo_url && (
           <img
             src={observation.photo_url}
-            alt="Observation photo"
-            className="w-full h-32 object-cover rounded mb-2"
+            alt="Observation"
+            className="w-full h-28 object-cover rounded-md mb-2"
+            style={{ border: '1px solid var(--border)' }}
           />
         )}
 
+        {/* Description */}
         {observation.description && (
-          <p className="text-slate-700 mb-1">{observation.description}</p>
+          <p className="text-sm mb-2 leading-snug" style={{ color: 'var(--text-primary)' }}>
+            {observation.description}
+          </p>
         )}
 
-        <div className="mb-1">
-          <Stars value={observation.severity} />
-        </div>
+        {/* Severity */}
+        {observation.severity && (
+          <div className="flex gap-0.5 mb-2">
+            {Array.from({ length: 5 }, (_, i) => (
+              <span key={i} className="text-sm" style={{ color: i < observation.severity! ? '#f59e0b' : 'var(--border-mid)' }}>★</span>
+            ))}
+          </div>
+        )}
 
-        <div className="text-xs text-slate-500">
-          <div>📍 {observation.lat.toFixed(5)}, {observation.lng.toFixed(5)}</div>
-          <div>🕐 {date}</div>
-          {!observation.synced && (
-            <div className="text-amber-600 font-medium mt-1">⚠️ Pending sync</div>
-          )}
+        {/* Meta */}
+        <div
+          className="space-y-0.5 pt-2 text-xs font-mono"
+          style={{ color: 'var(--text-muted)', borderTop: '1px solid var(--border)' }}
+        >
+          <div>{observation.lat.toFixed(5)}, {observation.lng.toFixed(5)}</div>
+          <div>{date}</div>
         </div>
       </div>
     </Popup>

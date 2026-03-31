@@ -1,32 +1,235 @@
 @import "tailwindcss";
 
+/* ─── FIELDOPS Design System ────────────────────────────────────────────── */
+
+/* Dark mode (default) */
 :root {
-  --background: #0f172a;
-  --foreground: #f8fafc;
+  --bg-base:      #080c12;
+  --bg-raised:    #0e1520;
+  --bg-surface:   #141d2b;
+  --bg-elevated:  #1c2a3d;
+  --bg-overlay:   #243348;
+  --border:       rgba(255,255,255,0.07);
+  --border-mid:   rgba(255,255,255,0.12);
+  --border-hi:    rgba(245,158,11,0.35);
+  --text-primary: #e2e8f4;
+  --text-secondary:#8a9bb8;
+  --text-muted:   #3d5068;
+  --accent:       #f59e0b;
+  --accent-dim:   rgba(245,158,11,0.12);
+  --accent-glow:  rgba(245,158,11,0.2);
+  --accent-fore:  #000000;
+  --success:      #10b981;
+  --success-dim:  rgba(16,185,129,0.12);
+  --danger:       #f43f5e;
+  --danger-dim:   rgba(244,63,94,0.12);
+  --info:         #38bdf8;
+  --info-dim:     rgba(56,189,248,0.12);
+  --warning:      #fb923c;
+  --map-bg:       #0e1520;
+  --scrollbar:    #1c2a3d;
+  --shadow:       0 4px 24px rgba(0,0,0,0.5);
+  --shadow-sm:    0 2px 8px rgba(0,0,0,0.4);
+  --radius:       8px;
 }
+
+/* Light mode */
+[data-theme="light"] {
+  --bg-base:      #f0ece4;
+  --bg-raised:    #e8e3da;
+  --bg-surface:   #ffffff;
+  --bg-elevated:  #f8f5ef;
+  --bg-overlay:   #ede8e0;
+  --border:       rgba(0,0,0,0.08);
+  --border-mid:   rgba(0,0,0,0.14);
+  --border-hi:    rgba(180,83,9,0.35);
+  --text-primary: #0a0e14;
+  --text-secondary:#4a5568;
+  --text-muted:   #9aa5b4;
+  --accent:       #b45309;
+  --accent-dim:   rgba(180,83,9,0.08);
+  --accent-glow:  rgba(180,83,9,0.15);
+  --accent-fore:  #ffffff;
+  --success:      #047857;
+  --success-dim:  rgba(4,120,87,0.1);
+  --danger:       #be123c;
+  --danger-dim:   rgba(190,18,60,0.1);
+  --info:         #0369a1;
+  --info-dim:     rgba(3,105,161,0.1);
+  --warning:      #c2410c;
+  --map-bg:       #e8e3da;
+  --scrollbar:    #c8c0b0;
+  --shadow:       0 4px 24px rgba(0,0,0,0.12);
+  --shadow-sm:    0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* ─── Base ─────────────────────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+
+html { height: 100%; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  height: 100%;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-dm-sans, system-ui, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
-/* Leaflet overrides */
+/* ─── Scrollbar ─────────────────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 4px; height: 4px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: var(--scrollbar); border-radius: 4px; }
+
+/* ─── Typography utilities ──────────────────────────────────────────────── */
+.font-display {
+  font-family: var(--font-barlow, sans-serif);
+  letter-spacing: 0.02em;
+}
+.font-mono {
+  font-family: var(--font-mono, monospace);
+}
+.label-caps {
+  font-family: var(--font-barlow, sans-serif);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ─── Surface / Card ────────────────────────────────────────────────────── */
+.surface {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.surface-raised {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* ─── Input ─────────────────────────────────────────────────────────────── */
+.field-input {
+  width: 100%;
+  min-height: 44px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-family: var(--font-dm-sans, system-ui);
+  padding: 0.625rem 1rem;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.field-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.field-input::placeholder { color: var(--text-muted); }
+
+/* ─── Buttons ────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 1.25rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+  user-select: none;
+}
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-fore);
+}
+.btn-primary:hover  { filter: brightness(1.1); }
+.btn-primary:active { filter: brightness(0.95); transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-mid);
+}
+.btn-ghost:hover { background: var(--bg-elevated); color: var(--text-primary); }
+
+.btn-danger {
+  background: var(--danger-dim);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+
+/* ─── Badge ──────────────────────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: var(--font-barlow, sans-serif);
+}
+
+/* ─── Leaflet overrides ──────────────────────────────────────────────────── */
 .leaflet-container {
+  background: var(--map-bg);
+  font-family: var(--font-dm-sans, system-ui);
   height: 100%;
   width: 100%;
-  background: #1e293b;
 }
-
 .leaflet-popup-content-wrapper {
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-mid);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+.leaflet-popup-tip { background: var(--bg-surface); }
+.leaflet-popup-content { margin: 12px 14px; }
+.leaflet-control-attribution { font-size: 10px !important; opacity: 0.5; }
+.leaflet-bar a {
+  background: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-mid) !important;
+}
+.leaflet-bar a:hover { background: var(--bg-elevated) !important; }
+
+/* ─── Cluster overrides ──────────────────────────────────────────────────── */
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large {
+  background-color: rgba(245,158,11,0.15) !important;
+}
+.marker-cluster-small div,
+.marker-cluster-medium div,
+.marker-cluster-large div {
+  background-color: rgba(245,158,11,0.85) !important;
+  color: #000 !important;
+  font-weight: 700;
+  font-family: var(--font-barlow, sans-serif);
+}
+[data-theme="light"] .marker-cluster-small,
+[data-theme="light"] .marker-cluster-medium,
+[data-theme="light"] .marker-cluster-large {
+  background-color: rgba(180,83,9,0.12) !important;
+}
+[data-theme="light"] .marker-cluster-small div,
+[data-theme="light"] .marker-cluster-medium div,
+[data-theme="light"] .marker-cluster-large div {
+  background-color: rgba(180,83,9,0.8) !important;
+  color: #fff !important;
 }
 
-.leaflet-popup-content {
-  margin: 12px 16px;
-}
-
-/* Safe area support for notch phones */
-.safe-area-inset-bottom {
-  padding-bottom: env(safe-area-inset-bottom);
-}
+/* ─── Safe area ──────────────────────────────────────────────────────────── */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
