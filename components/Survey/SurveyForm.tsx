@@ -77,6 +77,10 @@ export function SurveyForm() {
 
     try {
       const supabase = createClient()
+
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError || !user) throw new Error('Not authenticated')
+
       let photo_url: string | null = null
 
       if (photo) {
@@ -94,6 +98,7 @@ export function SurveyForm() {
       }
 
       const { error } = await supabase.from('observations').insert({
+        user_id: user.id,
         type: data.type,
         description: data.description,
         severity: data.severity,

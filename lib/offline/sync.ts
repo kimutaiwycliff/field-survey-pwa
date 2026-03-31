@@ -3,6 +3,10 @@ import { getQueue, clearItem } from './queue'
 
 export async function syncQueue(): Promise<{ synced: number; failed: number }> {
   const supabase = createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { synced: 0, failed: 0 }
+
   const queue = await getQueue()
   let synced = 0
   let failed = 0
@@ -29,6 +33,7 @@ export async function syncQueue(): Promise<{ synced: number; failed: number }> {
       }
 
       const { error } = await supabase.from('observations').insert({
+        user_id: user.id,
         type: item.type,
         description: item.description,
         severity: item.severity,
