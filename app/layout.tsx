@@ -8,10 +8,6 @@ export const metadata: Metadata = {
   title: 'Field Survey',
   description: 'GIS field data collection Progressive Web App',
   manifest: '/manifest.json',
-  icons: {
-    icon: '/favicon.ico',
-    apple: '/icons/icon-192.png',
-  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
